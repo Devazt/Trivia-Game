@@ -12,6 +12,6 @@ func UserRoutes(r *mux.Router) {
 	userRepository := repositories.RepositoryUsers(postgres.DB)
 	h := handlers.Handleuser(userRepository)
 
-	r.HandleFunc("/user", h.GetUser).Methods("GET")
-	r.HandleFunc("/user", h.CreateUser).Methods("POST")
+	r.HandleFunc("/user", h.GetUser).Methods("POST")
+	r.HandleFunc("/createUser", h.CreateUser).Methods("POST")
 }

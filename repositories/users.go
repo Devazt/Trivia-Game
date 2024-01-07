@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Nakano-Nino/Trivia-Game/models"
@@ -24,26 +23,15 @@ func RepositoryUsers(db *gorm.DB) *repository {
 
 func (r *repository) GetUser(Email string) (models.User, error) {
 	var user models.User
-	err := r.db.First(&user, Email).Error
+	err := r.db.First(&user, "email = ?", Email).Error
 
 	return user, err
 }
 
 func (r *repository) CreateUser(user models.User) (models.User, error) {
-	userExists, err := r.GetUser(user.Email)
+	err := r.db.Create(&user).Error
 	if err != nil {
-		log.Fatal("failed to get user: ", err)
-		return user, err
+		log.Fatal("failed to create user: ", err)
 	}
-
-	if userExists.Email == user.Email {
-		fmt.Errorf("user already exists: %s", user.Email)
-		return user, err
-	} else {
-		err := r.db.Create(&user).Error
-		if err != nil {
-			log.Fatal("failed to create user: ", err)
-		}
-		return user, err
-	}
+	return user, err
 }
