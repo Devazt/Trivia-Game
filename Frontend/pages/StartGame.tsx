@@ -59,8 +59,8 @@ const StartGame = () => {
   const initialUserDiamond = parseInt(diamond, 10)
   const [userDiamond, setUserDiamond] = useState(initialUserDiamond)
 
-  const navigate = useNavigation();
-  const isFocused = useIsFocused();
+  const navigate = useNavigation()
+  const isFocused = useIsFocused()
 
   const toggleModalDiamond = () => {
     setModalDiamond(!isModalDiamond)
@@ -72,12 +72,12 @@ const StartGame = () => {
   const socket = initializeSocket()
 
   const clearLobby = async () => {
-    await AsyncStorage.removeItem('roomId')
+    await AsyncStorage.removeItem("roomId")
   }
 
   useEffect(() => {
     clearLobby()
-    socket.emit('clear', true)
+    socket.emit("clear", true)
   }, [isFocused])
 
   useEffect(() => {

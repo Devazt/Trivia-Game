@@ -5,11 +5,18 @@ import { useNavigation } from "@react-navigation/native"
 import { initializeSocket } from "../utils/socket"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
+import { jwtDecode } from "jwt-decode"
+
+interface DecodedToken {
+  email: string
+}
 const PodiumWinner = () => {
   const socket = initializeSocket()
   const navigate = useNavigation()
-  const [data, setData] = useState([])
+  const [data, setData] = useState<any>([])
   const [roomId, setRoomId] = useState("")
+  const token = localStorage.getItem("user") + ""
+  const email = jwtDecode<DecodedToken>(token)
   console.log("info user:", data)
 
   const getRoomId = async () => {
@@ -17,30 +24,26 @@ const PodiumWinner = () => {
     setRoomId(roomId)
   }
 
-  const awardDiamonds = async (email: string) => {
-    try {
-      const response = await axios.post(
-        "https://92b308gx-50051.asse.devtunnels.ms/update-users",
-        { email }
-      )
-
-      console.log("Diamonds awarded successfully:", response.data)
-    } catch (error) {
-      console.error("Error awarding diamonds:", error)
-    }
-  }
-
   useEffect(() => {
     getRoomId()
     socket.on("finish", async (user) => {
       setData(user.sort((a: any, b: any) => b.score - a.score))
-      const winnerEmail = data.length > 0 ? data[0].email : ""
-      await AsyncStorage.removeItem("roomId")
 
-      if (winnerEmail) {
-        awardDiamonds(winnerEmail)
-      }
+      await AsyncStorage.removeItem("roomId")
     })
+    if (data[0].email === email)
+      async () => {
+        try {
+          const response = await axios.put(
+            "https://92b308gx-50051.asse.devtunnels.ms/update-user",
+            { email }
+          )
+
+          console.log("Diamonds awarded successfully:", response.data)
+        } catch (error) {
+          console.error("Error awarding diamonds:", error)
+        }
+      }
   }, [roomId])
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -68,7 +71,7 @@ const PodiumWinner = () => {
           />
         </View>
         {data.length !== 0 &&
-          data.map((user: any, index) => (
+          data.map((user: any, index: any) => (
             <View style={{ alignItems: "center", top: -200 }}>
               {/* win 2  */}
               {index > 0 && index < 2 && (
