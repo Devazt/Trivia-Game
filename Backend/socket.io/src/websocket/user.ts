@@ -26,7 +26,7 @@ export default async function user(io:Server, socket:Socket) {
 
     socket.on('answer', message => {
         const { name, avatar, answer, roomId, email } = message;
-        if ( !name || !avatar || !email) {
+        if ( !name || !avatar || !email || !answer) {
             socket.emit('answer', "Please provide name, avatar and answer");
             return;
         }

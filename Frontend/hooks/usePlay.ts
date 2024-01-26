@@ -23,7 +23,7 @@ export default function usePlay() {
 
   const [selectOption, setSelectOption] = useState(null);
   const [question, setQuestion] = useState<Questions>({
-    image_question: "https://i.pravatar.cc/300",
+    image_question: "...",
     A: "",
     B: "",
     C: "",

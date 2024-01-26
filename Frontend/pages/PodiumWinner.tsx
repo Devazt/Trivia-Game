@@ -8,16 +8,22 @@ import axios from "axios"
 import { jwtDecode } from "jwt-decode"
 
 interface DecodedToken {
+  avatar: string
+  name: string
+  diamond: string
   email: string
 }
+
 const PodiumWinner = () => {
   const socket = initializeSocket()
   const navigate = useNavigation()
-  const [data, setData] = useState<any>([])
+  const [data, setData] = useState<any[]>([])
   const [roomId, setRoomId] = useState("")
   const token = localStorage.getItem("user") + ""
-  const email = jwtDecode<DecodedToken>(token)
-  console.log("info user:", data)
+  const userToken = jwtDecode<DecodedToken>(token)
+  const email = userToken.email
+  console.log(email)
+  console.log("info user:", data[0]?.email)
 
   const getRoomId = async () => {
     const roomId: any = await AsyncStorage.getItem("roomId")
@@ -27,58 +33,105 @@ const PodiumWinner = () => {
   useEffect(() => {
     getRoomId()
     socket.on("finish", async (user) => {
-      setData(user.sort((a: any, b: any) => b.score - a.score))
-
-      await AsyncStorage.removeItem("roomId")
+      const sorted = user.sort((a: any, b: any) => b.score - a.score)
+      setData(sorted)
     })
-    if (data[0].email === email)
-      async () => {
-        try {
-          const response = await axios.put(
-            "https://92b308gx-50051.asse.devtunnels.ms/update-user",
-            { email }
-          )
-
-          console.log("Diamonds awarded successfully:", response.data)
-        } catch (error) {
-          console.error("Error awarding diamonds:", error)
-        }
-      }
   }, [roomId])
+
+  useEffect(() => {
+    if (data.length > 0) {
+      console.log("data ada")
+      if (data[0]?.email == email) {
+        console.log("email sesuai ")
+        ;(async () => {
+          console.log("Yes you're the winner")
+          try {
+            const response = await axios.put(
+              "https://92b308gx-50051.asse.devtunnels.ms/update-user?email=" +
+                email
+            )
+            await AsyncStorage.removeItem("roomId")
+
+            console.log("Diamonds awarded successfully:", response.data)
+          } catch (error) {
+            console.error("Error awarding diamonds:", error)
+          }
+        })()
+      } else {
+        console.log("User is not the winner")
+      }
+    }
+  }, [data])
+  const handleBackHome = () => {
+    navigate.navigate("StartGame" as never)
+  }
+
+  const handleReplay = () => {
+    socket.disconnect()
+    navigate.navigate("FindMatch" as never)
+  }
+
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Image style={styles.background} source={require("../assets/bg2.png")} />
 
-      <View style={{ alignItems: "center" }}>
-        <View style={{ alignItems: "center", position: "absolute", top: 50 }}>
+      <View style={{ alignItems: "center", position: "absolute", top: 50 }}>
+        {/* {data.length !== 0 &&
+          data.map((user: any, index) => (
+            <>
+              {index === 0 && user.email == email ? (
+                <Image
+                  style={{ width: 420, height: 220 }}
+                  source={require("../assets/image/congratulation.png")}
+                />
+              ) : (
+                <Text style={{ color: "white", fontSize: 30 }}>
+                  Better Luck Next Time
+                </Text>
+              )}
+            </>
+          ))} */}
+
+        {data[0]?.email == email ? (
           <Image
             style={{ width: 420, height: 220 }}
             source={require("../assets/image/congratulation.png")}
           />
-          <View style={{ alignItems: "center", position: "absolute", top: 80 }}>
-            <LottieView
-              source={require("../assets/lottivew/fireworks.json")}
-              autoPlay
-              loop
-            />
-          </View>
-        </View>
+        ) : (
+          <Image
+            style={{ width: 420, height: 220, objectFit: "cover" }}
+            source={require("../assets/image/gameover.png")}
+          />
+        )}
 
-        <View style={{ alignItems: "center", position: "relative", top: 8 }}>
+        {/* <Image
+          style={{ width: 420, height: 220 }}
+          source={require("../assets/image/congratulation.png")}
+        /> */}
+        <View style={{ alignItems: "center", position: "absolute", top: 80 }}>
+          <LottieView
+            source={require("../assets/lottivew/fireworks.json")}
+            autoPlay
+            loop
+          />
+        </View>
+      </View>
+      <View style={{ alignItems: "center" }}>
+        <View style={{ alignItems: "center", top: 180 }}>
           <Image
             style={{ width: 425, height: 400, position: "relative" }}
             source={require("../assets/image/awards.png")}
           />
         </View>
         {data.length !== 0 &&
-          data.map((user: any, index: any) => (
-            <View style={{ alignItems: "center", top: -200 }}>
+          data.map((user: any, index) => (
+            <View style={{ alignItems: "center", top: -100 }}>
               {/* win 2  */}
               {index > 0 && index < 2 && (
                 <View
                   style={{
                     alignItems: "center",
-                    top: -130,
+                    top: -100,
                     marginLeft: -285,
                   }}
                 >
@@ -87,19 +140,19 @@ const PodiumWinner = () => {
                       alignItems: "center",
                       width: 120,
                       height: 120,
-                      top: 10,
+                      top: 50,
                     }}
                   >
                     <Image
                       source={user.avatar}
                       style={{
-                        top: 10,
+                        top: -60,
                         width: 120,
                         height: 120,
                       }}
                     />
                   </View>
-                  <View style={{ margin: -100, top: 130 }}>
+                  <View style={{ margin: -100, top: 105 }}>
                     <Text
                       style={{
                         fontSize: 20,
@@ -109,6 +162,7 @@ const PodiumWinner = () => {
                       }}
                     >
                       {user.name}
+                      {user.email == email ? " (You)" : ""}
                     </Text>
                     <Text
                       style={{
@@ -160,6 +214,7 @@ const PodiumWinner = () => {
                       }}
                     >
                       {user.name}
+                      {user.email == email ? " (You)" : ""}
                     </Text>
                     <Text
                       style={{
@@ -211,6 +266,7 @@ const PodiumWinner = () => {
                       }}
                     >
                       {user.name}
+                      {user.email == email ? " (You)" : ""}
                     </Text>
                     <Text
                       style={{
@@ -229,9 +285,7 @@ const PodiumWinner = () => {
           ))}
 
         <View style={styles.backButton}>
-          <TouchableOpacity
-            onPress={() => navigate.navigate("StartGame" as never)}
-          >
+          <TouchableOpacity onPress={handleBackHome}>
             <LottieView
               source={require("../assets/lottivew/back.json")}
               autoPlay
@@ -239,6 +293,15 @@ const PodiumWinner = () => {
             />
           </TouchableOpacity>
         </View>
+        {/* <View>
+          <TouchableOpacity onPress={handleReplay}>
+            <LottieView
+              source={require("../assets/lottivew/continuButton.json")}
+              autoPlay
+              loop
+            />
+          </TouchableOpacity>
+        </View> */}
       </View>
     </View>
   )

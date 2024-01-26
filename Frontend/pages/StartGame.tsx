@@ -75,8 +75,13 @@ const StartGame = () => {
     await AsyncStorage.removeItem("roomId")
   }
 
+  const clearWinner = async () => {
+    await AsyncStorage.removeItem("winner")
+  }
+
   useEffect(() => {
     clearLobby()
+    clearWinner()
     socket.emit("clear", true)
   }, [isFocused])
 
