@@ -1,80 +1,113 @@
-import LottieView from "lottie-react-native";
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Image, Text, TouchableOpacity } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { initializeSocket } from "../utils/socket";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import LottieView from "lottie-react-native"
+import React, { useEffect, useState } from "react"
+import { View, StyleSheet, Image, Text, TouchableOpacity } from "react-native"
+import { useNavigation } from "@react-navigation/native"
+import { initializeSocket } from "../utils/socket"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import axios from "axios"
+import { jwtDecode } from "jwt-decode"
 
 interface DecodedToken {
-  avatar: string;
-  name: string;
-  diamond: string;
-  email: string;
+  avatar: string
+  name: string
+  diamond: string
+  email: string
 }
 
 const PodiumWinner = () => {
-  const socket = initializeSocket();
-  const navigate = useNavigation();
-  const [data, setData] = useState<any[]>([]);
-  const [roomId, setRoomId] = useState("");
-  const token = localStorage.getItem("user") + "";
-  const userToken = jwtDecode<DecodedToken>(token);
-  const email = userToken.email;
-  console.log(email);
-  console.log("info user:", data[0]?.email);
+  const socket = initializeSocket()
+  const navigate = useNavigation()
+  const [data, setData] = useState<any[]>([])
+  const [roomId, setRoomId] = useState("")
+  const token = localStorage.getItem("user") + ""
+  const userToken = jwtDecode<DecodedToken>(token)
+  const email = userToken.email
+  console.log(email)
+  console.log("info user:", data[0]?.email)
 
   const getRoomId = async () => {
-    const roomId: any = await AsyncStorage.getItem("roomId");
-    setRoomId(roomId);
-  };
+    const roomId: any = await AsyncStorage.getItem("roomId")
+    setRoomId(roomId)
+  }
 
   useEffect(() => {
-    getRoomId();
+    getRoomId()
     socket.on("finish", async (user) => {
-      const sorted = user.sort((a: any, b: any) => b.score - a.score);
-      setData(sorted);
-    });
-  }, [roomId]);
+      const sorted = user.sort((a: any, b: any) => b.score - a.score)
+      setData(sorted)
+    })
+  }, [roomId])
 
   useEffect(() => {
     if (data.length > 0) {
-      console.log("data ada");
+      console.log("data ada")
       if (data[0]?.email == email) {
-        console.log("email sesuai ");
-
-        (async () => {
-          console.log("Yes you're the winner");
+        console.log("email sesuai ")
+        ;(async () => {
+          console.log("Yes you're the winner")
           try {
             const response = await axios.put(
-              "https://92b308gx-50051.asse.devtunnels.ms/update-user?email=" +email,
-            );
-            await AsyncStorage.removeItem("roomId");
+              "https://92b308gx-50051.asse.devtunnels.ms/update-user?email=" +
+                email
+            )
+            await AsyncStorage.removeItem("roomId")
 
-            console.log("Diamonds awarded successfully:", response.data);
+            console.log("Diamonds awarded successfully:", response.data)
           } catch (error) {
-            console.error("Error awarding diamonds:", error);
+            console.error("Error awarding diamonds:", error)
           }
         })()
       } else {
-        console.log("User is not the winner");
+        console.log("User is not the winner")
       }
     }
-  }, [data]);
+  }, [data])
   const handleBackHome = () => {
-    navigate.navigate("StartGame" as never);
-  };
+    navigate.navigate("StartGame" as never)
+  }
+
+  const handleReplay = () => {
+    socket.disconnect()
+    navigate.navigate("FindMatch" as never)
+  }
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <Image style={styles.background} source={require("../assets/bg2.png")} />
 
       <View style={{ alignItems: "center", position: "absolute", top: 50 }}>
-        <Image
+        {/* {data.length !== 0 &&
+          data.map((user: any, index) => (
+            <>
+              {index === 0 && user.email == email ? (
+                <Image
+                  style={{ width: 420, height: 220 }}
+                  source={require("../assets/image/congratulation.png")}
+                />
+              ) : (
+                <Text style={{ color: "white", fontSize: 30 }}>
+                  Better Luck Next Time
+                </Text>
+              )}
+            </>
+          ))} */}
+
+        {data[0]?.email == email ? (
+          <Image
+            style={{ width: 420, height: 220 }}
+            source={require("../assets/image/congratulation.png")}
+          />
+        ) : (
+          <Image
+            style={{ width: 420, height: 220, objectFit: "cover" }}
+            source={require("../assets/image/gameover.png")}
+          />
+        )}
+
+        {/* <Image
           style={{ width: 420, height: 220 }}
           source={require("../assets/image/congratulation.png")}
-        />
+        /> */}
         <View style={{ alignItems: "center", position: "absolute", top: 80 }}>
           <LottieView
             source={require("../assets/lottivew/fireworks.json")}
@@ -129,6 +162,7 @@ const PodiumWinner = () => {
                       }}
                     >
                       {user.name}
+                      {user.email == email ? " (You)" : ""}
                     </Text>
                     <Text
                       style={{
@@ -180,6 +214,7 @@ const PodiumWinner = () => {
                       }}
                     >
                       {user.name}
+                      {user.email == email ? " (You)" : ""}
                     </Text>
                     <Text
                       style={{
@@ -231,6 +266,7 @@ const PodiumWinner = () => {
                       }}
                     >
                       {user.name}
+                      {user.email == email ? " (You)" : ""}
                     </Text>
                     <Text
                       style={{
@@ -257,12 +293,21 @@ const PodiumWinner = () => {
             />
           </TouchableOpacity>
         </View>
+        {/* <View>
+          <TouchableOpacity onPress={handleReplay}>
+            <LottieView
+              source={require("../assets/lottivew/continuButton.json")}
+              autoPlay
+              loop
+            />
+          </TouchableOpacity>
+        </View> */}
       </View>
     </View>
-  );
-};
+  )
+}
 
-export default PodiumWinner;
+export default PodiumWinner
 const styles = StyleSheet.create({
   background: {
     position: "absolute",
@@ -335,4 +380,4 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-});
+})
